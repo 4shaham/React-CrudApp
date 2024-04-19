@@ -1,10 +1,11 @@
 import React from 'react'
+import Login from '../Components/UserLogin.js/Login'
 
 function LoginPage() {
   return (
-    <div>
-      Login
-    </div>
+   <div style={{background:'white'}}>
+    <Login/>
+   </div>
   )
 }
 

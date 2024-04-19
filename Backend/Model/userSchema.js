@@ -10,14 +10,17 @@ userName:{
 email:{
   type:String,
   required:true,
-  unique:true
 },
-imageId:{
-    type:String,
-    required:true
+password:{
+  type:String,
+  required:true
 }
-
+// imageId:{
+//     type:String,
+//     required:true
+// }
+ 
 })
 
-const UserDb = mongoose.model('Product',schema);
-export default UserDb;
+const UserDb = mongoose.model('Userdb',schema);
+module.exports = UserDb;
