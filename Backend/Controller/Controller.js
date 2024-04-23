@@ -1,6 +1,7 @@
-const { log } = require('console')
+
 const UserDb=require('../Model/userSchema');
 const { use } = require('../Router/UserRouter');
+const jwt = require('jsonwebtoken');
 
 
 const createUser=async(req,res)=>{
@@ -8,9 +9,9 @@ const createUser=async(req,res)=>{
 
     try{
 
-        const{name,password,email}=req.body
+        const{userName,password,email,url}=req.body
 
-        if(!name || !password){
+        if(!userName || !password){
             console.log('koooo');
             return  res.send('please fill all datas')
         }
@@ -23,10 +24,13 @@ const createUser=async(req,res)=>{
               });
         }
 
-        const user=new UserDb({     
-         userName:name,
+        const user=new UserDb({   
+
+         userName:userName,
          email:email,
-         password:password
+         password:password,
+         imageUrl:url
+
         })
 
 
@@ -47,14 +51,16 @@ const createUser=async(req,res)=>{
 const userAuth=async(req,res)=>{
 
     const {email,password}=req.body
+
+    console.log(email,password);
     
-    if(!email.trim()=='' || password.trim()==''){
-        return res.json(
-            {
-                err:'The field is required'
-            }
-        )
-    }
+    // if(!email.trim()=='' || password.trim()==''){
+    //     return res.json(
+    //         {
+    //             err:'The field is required'
+    //         }
+    //     )
+    // }  
 
 
     const user=await UserDb.findOne({email:email})
@@ -68,15 +74,32 @@ const userAuth=async(req,res)=>{
     }
 
     if(user.email == email && user.password == password ){
+
+        let jwtSecretKey =process.env.JWT_SECRET_KEY;
+        let data = {
+           time: Date(),
+           userName:user.userName,
+           userId:user._id,
+        }
+
+        const token = jwt.sign(data, jwtSecretKey);
         return res.json({
-            isLogin:true
+            isLogin:true,
+            userData:user,
+            jwtToken:token
         })
+
     }else{
+
         return res.json({
             err:'Your password is not Match'
         })
+
     }
 }
+
+
+// admin side
 
 
 const adminAuth=async(req,res)=>{
@@ -118,11 +141,16 @@ const userDetails=async(req,res)=>{
 
 }
 
+
+
 const deletUser=async(req,res)=>{
 
-const id=req.query.id
+ try{
 
-const user=await UserDb.findOne({id:id})
+    
+const id=req.query.id
+console.log(req.query)
+const user=await UserDb.findOne({_id:id})
 
 if(!user){
     return res.json({
@@ -130,8 +158,9 @@ if(!user){
     })
 }
 
-const deltedUser=await UserDb.deleteOne({id:id})
-
+const deltedUser=await UserDb.deleteOne({_id:id})
+const find=await UserDb.findOne({_id:id})
+console.log(deltedUser,find)
 if(deltedUser.acknowledged=='true'){
     return res.json({
         deltedUser:user,
@@ -143,7 +172,51 @@ if(deltedUser.acknowledged=='true'){
     })
 }
 
+ }catch(err){
+    console.log(err)
+ }   
 
+
+
+}
+
+
+const adminCreateUser=async(req,res)=>{
+   
+    try{
+
+        const{userName,password,email,url}=req.body
+
+
+
+        const isUser=await UserDb.findOne({email:email})
+
+        if(isUser){
+            return res.status(400).json({
+                error: "This email is already used."
+              });
+        }
+
+        const user=new UserDb({   
+
+         userName:userName,
+         email:email,
+         password:password,
+         imageUrl:url
+
+        })
+
+
+        await  user.save()
+        res.json({registration:true}) 
+
+    }catch(err){
+        console.log('yutyt', err);
+        res.send(err)
+
+    }
+
+    
 }
 
 
@@ -154,7 +227,8 @@ module.exports = {
     userAuth,
     adminAuth,
     userDetails,
-    deletUser
+    deletUser,
+    adminCreateUser
 }
 
 

@@ -14,11 +14,11 @@ email:{
 password:{
   type:String,
   required:true
+},
+imageUrl:{
+    type:String,
+    required:true
 }
-// imageId:{
-//     type:String,
-//     required:true
-// }
  
 })
 
