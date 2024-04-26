@@ -77,17 +77,17 @@ const userAuth=async(req,res)=>{
 
         let jwtSecretKey =process.env.JWT_SECRET_KEY;
         let data = {
-           time: Date(),
-           userName:user.userName,
-           userId:user._id,
-        }
-
-        const token = jwt.sign(data, jwtSecretKey);
-        return res.json({
-            isLogin:true,
-            userData:user,
-            jwtToken:token
-        })
+            time: Date(),
+            userName: user.userName,
+            userId: user._id,
+          };
+          
+          const token = jwt.sign(data, jwtSecretKey, { expiresIn: '1h' });
+          return res.json({
+            isLogin: true,
+            userData: user,
+            jwtToken: token,
+          });
 
     }else{
 
@@ -116,9 +116,19 @@ const adminAuth=async(req,res)=>{
      const adminPassword=process.env.ADMIN_PASSWORD
 
      if(adminEmail==email && adminPassword ==password){
+
+        let jwtSecretKey =process.env.JWT_SECRET_KEY;
+        let data = {
+            time:Date(),
+            email:adminEmail,
+        };
+
+        const token = jwt.sign(data, jwtSecretKey, { expiresIn: '1h' });
         return res.json({
-            adminIsLoged:'true'
+            adminIsLoged:'true',
+            jwtToken: token,
         })
+
      }else{
         return res.json({
             err:'The details not match'
@@ -219,6 +229,61 @@ const adminCreateUser=async(req,res)=>{
     
 }
 
+const AdminEditUserData=async(req,res)=>{
+
+    try{
+      const id =req.query.id
+      const userData=await UserDb.findOne({_id:id})
+
+      if(userData){
+        res.status(200).json({
+            userData:userData
+          });
+      }else{
+        res.status(401).json({
+            error: "This id user not here."
+          });
+
+      }
+
+    }catch(err){
+        console.log(err)
+    }
+
+}
+
+
+const AdminEdit=async(req,res)=>{
+    try{
+
+        const id=req.query.id 
+        const{userName,email,password,url}=req.body
+       
+        if(!url){
+            url=req.body.imageUrl
+        }   
+        console.log(req.body,url)
+        const updated = await UserDb.updateOne(
+            { _id: id },
+            {
+              $set: {
+                // userId: editeduserDetails.userId,
+                userName:userName,
+                email:email,
+                password:password,
+                imageUrl:url
+              }
+            }
+          );
+
+          return res.json('sucesss')
+
+    }catch(err){
+        console.log(err)
+    }
+    
+
+}
 
 
 
@@ -228,7 +293,9 @@ module.exports = {
     adminAuth,
     userDetails,
     deletUser,
-    adminCreateUser
+    adminCreateUser,
+    AdminEditUserData,
+    AdminEdit
 }
 
 
